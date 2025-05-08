@@ -28,7 +28,7 @@ def calculator_tool(query: str) -> str:
             return "Query does not contain 'calculate'."
     except Exception as e:
         logger.error(f"Calculator tool error for query '{query}': {e}")
-        return f"Calculator error: Could not evaluate expression."
+        return f"Calculator error: Could not evaluate expression.: {e}"
 
 
 def dictionary_tool(query: str) -> str:
@@ -56,7 +56,7 @@ def dictionary_tool(query: str) -> str:
             return "Query does not contain 'define'."
     except Exception as e:
         logger.error(f"Dictionary tool error for query '{query}': {e}")
-        return f"Dictionary error: Could not process definition request."
+        return f"Dictionary error: Could not process definition request.: {e}"
 
 
 def agent_route(
@@ -86,8 +86,9 @@ def agent_route(
 if __name__ == '__main__':
     # Example usage for testing the agent module
     from ingestion import ingest_documents, load_chunks_data
-    from vector_store import VectorStore, get_vector_store
-    import os
+    from vector_store import VectorStore  # , get_vector_store
+
+    # import os
 
     # Ensure documents are ingested and chunks data is available
     ingest_documents()

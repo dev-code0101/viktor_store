@@ -2,36 +2,28 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from typing import List, Dict, Any
 import logging
 
-from .config import FAISS_INDEX_PATH, CHUNKS_DATA_PATH
-from .ingestion import load_chunks_data, ingest_documents
-from .vector_store import VectorStore, get_vector_store
-from .agent import agent_route
-from .models import RetrievalResult, Chunk
+from app.config import FAISS_INDEX_PATH, CHUNKS_DATA_PATH
+from app.ingestion import load_chunks_data, ingest_documents
+from app.vector_store import VectorStore  # , get_vector_store
+from app.agent import agent_route
+from app.models import RetrievalResult, Chunk
 import os
+from contextlib import asynccontextmanager
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="RAG with Agentic Workflow API",
-    description="API for a RAG system with agent-based routing.",
-)
 
-# Global variables to hold chunks data and vector store instance
-# This assumes the data is loaded once when the app starts
-all_chunks: List[Dict[str, Any]] = []
-vector_store_instance: VectorStore = None
-
-
-@app.on_event("startup")
+# @app.on_event("startup")
 async def startup_event():
     """Load chunks and build/load vector index on application startup."""
     global all_chunks, vector_store_instance
-    logger.info("Starting up application...")
+    logger.info("startup_event: Starting up application...")
 
     # Ensure documents folder exists
-    from .config import DOCUMENTS_FOLDER
+    from app.config import DOCUMENTS_FOLDER
 
     if not os.path.exists(DOCUMENTS_FOLDER):
         logger.warning(
@@ -73,14 +65,35 @@ async def startup_event():
     logger.info("Application startup complete.")
 
 
-@app.on_event("shutdown")
+# @app.on_event("shutdown")
 async def shutdown_event():
     """Save vector index on application shutdown."""
     global vector_store_instance
-    logger.info("Shutting down application...")
+    logger.info("shutdown_event:Shutting down application...")
     if vector_store_instance and vector_store_instance.index:
         vector_store_instance.save_index()
     logger.info("Application shutdown complete.")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML mo`del
+    await startup_event()
+    yield
+    # Clean up the ML models and release the resources
+    await shutdown_event()
+
+
+app = FastAPI(
+    title="RAG with Agentic Workflow API",
+    description="API for a RAG system with agent-based routing.",
+    lifespan=lifespan,
+)
+
+# Global variables to hold chunks data and vector store instance
+# This assumes the data is loaded once when the app starts
+all_chunks: List[Dict[str, Any]] = []
+vector_store_instance: VectorStore = None
 
 
 # Dependency to provide chunks data
@@ -213,3 +226,9 @@ async def get_status():
         "chunks_data_path": CHUNKS_DATA_PATH,
     }
     return status_info
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

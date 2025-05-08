@@ -1,10 +1,12 @@
 import faiss
-import numpy as np
+
+# import numpy as np
 import logging
 import os
-import pickle
+
+# import pickle
 from sentence_transformers import SentenceTransformer
-from typing import List, Tuple
+from typing import List  # , Tuple
 
 from .config import EMBEDDING_MODEL_NAME, FAISS_INDEX_PATH
 from .models import Chunk

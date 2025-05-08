@@ -1,26 +1,31 @@
 import openai
-import os
+
+# import os
 import logging
 from typing import List
 
-from .config import OPENAI_API_KEY, LLM_MODEL_NAME
+from .config import LLM_MODEL_NAME, GROQ_API_KEY  # ,OPENAI_API_KEY
 from .models import Chunk
+from groq import Groq
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configure DeepAI API key
-openai.api_key = OPENAI_API_KEY
+# openai.api_key = OPENAI_API_KEY
+groq = Groq(
+    api_key=GROQ_API_KEY,
+)
 
 
 def get_llm_answer(
     question: str, context_chunks: List[Chunk], model_name: str = LLM_MODEL_NAME
 ) -> str:
     """Gets an answer from the LLM using the provided context."""
-    if not openai.api_key:
-        logger.error("DeepAI API key is not set.")
-        return "Error: DeepAI API key not configured."
+    # if not openai.api_key:
+    #     logger.error("DeepAI API key is not set.")
+    #     return "Error: DeepAI API key not configured."
 
     context = "\n\n".join([chunk.text for chunk in context_chunks])
 
@@ -37,13 +42,19 @@ def get_llm_answer(
     ]
 
     try:
-        response = openai.ChatCompletion.create(
-            model=model_name,
+        # response = openai.ChatCompletion.create(
+        #     model=model_name,
+        #     messages=messages,
+        #     max_tokens=300,  # Increased max tokens for potentially longer answers
+        #     temperature=0.5,
+        # )
+        response = groq.chat.completions.create(
             messages=messages,
-            max_tokens=300,  # Increased max tokens for potentially longer answers
+            model="llama-3.3-70b-versatile",
             temperature=0.5,
+            max_completion_tokens=1024,
         )
-        answer = response.choices[0].message['content'].strip()
+        answer = response.choices[0].message.content.strip()
         logger.info(f"LLM generated answer for question: '{question[:50]}...'")
         return answer
     except openai.error.AuthenticationError:
@@ -62,7 +73,7 @@ def get_llm_answer(
 if __name__ == '__main__':
     # Example usage for testing the llm module
     # This requires a valid DeepAI API key and some dummy chunks
-    if OPENAI_API_KEY:
+    if GROQ_API_KEY:
         dummy_chunks = [
             Chunk(
                 doc="dummy.txt",

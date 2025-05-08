@@ -2,10 +2,11 @@ import os
 import nltk
 import json
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict  # , Any
 
 from .config import DOCUMENTS_FOLDER, CHUNKS_DATA_PATH
 from .models import Chunk
+from nltk.tokenize import sent_tokenize
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -13,12 +14,13 @@ logger = logging.getLogger(__name__)
 
 try:
     nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
-    nltk.download('punkt')
 except LookupError:
     nltk.download('punkt')
 
-from nltk.tokenize import sent_tokenize
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
 
 
 def load_documents(doc_folder: str) -> Dict[str, str]:

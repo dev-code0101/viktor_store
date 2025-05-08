@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 DOCUMENTS_FOLDER = os.getenv("DOCUMENTS_FOLDER", "documents/")
 LLM_MODEL_NAME = os.getenv(
     "LLM_MODEL_NAME", "gpt-3.5-turbo"
